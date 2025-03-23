@@ -62,13 +62,13 @@ class Discriminator(nn.Module):
             conv_out = int(in_channels * factors[i - 1])
             self.prog_blocks.append(ConvBlock(conv_in, conv_out, use_pixelnorm=False))
             self.rgb_layers.append(
-                WSConv2d(img_channels, conv_in, kernel_size=1, stride=1, padding=0)
+                WSConv2d(img_channels+1, conv_in, kernel_size=1, stride=1, padding=0)
             )
 
         # perhaps confusing name "initial_rgb" this is just the RGB layer for 4x4 input size
         # did this to "mirror" the generator initial_rgb
         self.initial_rgb = WSConv2d(
-            img_channels, in_channels, kernel_size=1, stride=1, padding=0
+            img_channels+1, in_channels, kernel_size=1, stride=1, padding=0
         )
         self.rgb_layers.append(self.initial_rgb)
 
@@ -163,7 +163,7 @@ class Generator(nn.Module):
         # initial takes 1x1 -> 4x4
         self.initial = nn.Sequential(
             PixelNorm(),
-            nn.ConvTranspose2d(z_dim, in_channels, 4, 1, 0),
+            nn.ConvTranspose2d(z_dim*2, in_channels, 4, 1, 0),
             nn.LeakyReLU(0.2),
             WSConv2d(in_channels, in_channels, kernel_size=3, stride=1, padding=1),
             nn.LeakyReLU(0.2),
