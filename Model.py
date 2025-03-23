@@ -9,14 +9,14 @@ factors = [1,1, 1, 1 / 2, 1 / 4, 1 / 8, 1 / 16,1/32]
 sizes = [[1.5,2],[1,17/8],[2,2],[25/12,2],[2,137/68],[2,273/137],[199/100,2]]
 
 
-def gradient_penalty(critic, real, fake, alpha, train_step, device="cpu"):
+def gradient_penalty(critic, labels, real, fake, alpha, train_step, device="cpu"):
     BATCH_SIZE, C, H, W = real.shape
     beta = torch.rand((BATCH_SIZE, 1, 1, 1)).repeat(1, C, H, W).to(device)
     interpolated_images = real * beta + fake.detach() * (1 - beta)
     interpolated_images.requires_grad_(True)
 
     # Calculate critic scores
-    mixed_scores = critic(interpolated_images, alpha, train_step)
+    mixed_scores = critic(interpolated_images,labels, alpha, train_step)
 
     # Take the gradient of the scores with respect to the images
     gradient = torch.autograd.grad(
@@ -49,6 +49,11 @@ class Discriminator(nn.Module):
         super(Discriminator, self).__init__()
         self.prog_blocks, self.rgb_layers = nn.ModuleList([]), nn.ModuleList([])
         self.leaky = nn.LeakyReLU(0.2)
+
+        resolutions=[16,48,102,408,1700,6850,27300,108654]
+
+        for resolution in resolutions:
+            self.embeddings.append(nn.Embedding(7,resolution))
         # here we work back ways from factors because the discriminator
         # should be mirrored from the generator. So the first prog_block and
         # rgb layer we append will work for input size 1024x1024, then 512->256-> etc
@@ -79,7 +84,7 @@ class Discriminator(nn.Module):
             kernel_size=3, stride=2, padding = 1
         ),nn.AvgPool2d( #8 * 6
             kernel_size=[1,4], stride=[1,2], padding = [0,1]
-        ),nn.AvgPool2d( #4 * 4
+        ),nn.AvgPool2d( #4 * 4 
             kernel_size=[5,3], stride=[1,2], padding = [1,1]
         ) ] # down sampling using avg pool
         # this is the block for 4x4 input size
@@ -108,12 +113,15 @@ class Discriminator(nn.Module):
         # will get information about the variation in the batch/image
         return torch.cat([x, batch_statistics], dim=1)
 
-    def forward(self, x, alpha, steps):
+    def forward(self, labels, x, alpha, steps):
         # where we should start in the list of prog_blocks, maybe a bit confusing but
         # the last is for the 4x4. So example let's say steps=1, then we should start
         # at the second to last because input_size will be 8x8. If steps==0 we just
         # use the final block
         cur_step = len(self.prog_blocks) - steps
+        embeddings=self.embeddings[steps](labels)
+        embeddings=embeddings.view(labels.shape[0],1,x.shape[2],x.shape[2]) #x.shape[2] is the image size [Batch_size,channels,imgsize,imgsize]
+        x=torch.cat([x,embeddings],dim=1)
 
         # convert from rgb as initial step, this will depend on
         # the image size (each will have it's on rgb layer)
@@ -149,6 +157,9 @@ class Generator(nn.Module):
     def __init__(self, z_dim, in_channels, img_channels=1):
         super(Generator, self).__init__()
 
+        self.label_emb = nn.Embedding(7, z_dim)
+
+
         # initial takes 1x1 -> 4x4
         self.initial = nn.Sequential(
             PixelNorm(),
@@ -183,7 +194,10 @@ class Generator(nn.Module):
         # alpha should be scalar within [0, 1], and upscale.shape == generated.shape
         return torch.tanh(alpha * generated + (1 - alpha) * upscaled)
 
-    def forward(self, x, alpha, steps):
+    def forward(self, x,label, alpha, steps):
+        label_embedding=self.label_emb(label)
+        label_embedding=label_embedding.unsqueeze(2).unsqueeze(3)
+        x=torch.cat([x,label_embedding],dim=1)
         out = self.initial(x)
         if steps == 0:
             return self.initial_rgb(out)

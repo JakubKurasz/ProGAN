@@ -38,19 +38,20 @@ def train_fn(
     scaler_gen,
     scaler_critic
 ):
-    for batch_idx, (real, _) in enumerate(train_dl):
+    for batch_idx, (real, labels) in enumerate(train_dl):
         real = real.to(device)
         cur_batch_size = real.shape[0]
+        labels = labels.to(device)
 
         # Train Critic: max E[critic(real)] - E[critic(fake)] <-> min -E[critic(real)] + E[critic(fake)]
         # which is equivalent to minimizing the negative of the expression
         noise = torch.randn(cur_batch_size, 100, 1, 1).to(device)
 
         with torch.cuda.amp.autocast():
-            fake = gen(noise, alpha, step)
-            critic_real = critic(real, alpha, step)
-            critic_fake = critic(fake.detach(), alpha, step)
-            gp = gradient_penalty(critic, real, fake, alpha, step, device)
+            fake = gen(noise,labels, alpha, step)
+            critic_real = critic(real,labels, alpha, step)
+            critic_fake = critic(fake.detach(),labels, alpha, step)
+            gp = gradient_penalty(critic,labels, real, fake, alpha, step, device)
             loss_critic = (
                 -(torch.mean(critic_real) - torch.mean(critic_fake))
                 + LAMBDA_GP * gp
@@ -64,7 +65,7 @@ def train_fn(
 
         # Train Generator: max E[critic(gen_fake)] <-> min -E[critic(gen_fake)]
         with torch.cuda.amp.autocast():
-            gen_fake = critic(fake, alpha, step)
+            gen_fake = critic(fake,labels, alpha, step)
             loss_gen = -torch.mean(gen_fake)
 
         opt_gen.zero_grad()
@@ -79,7 +80,7 @@ def train_fn(
         alpha = min(alpha, 1)
         if batch_idx % 44 == 0 and batch_idx > 0:
             with torch.no_grad():
-                fake = gen(fixed_noise,alpha, step) * 0.5 + 0.5
+                fake = gen(fixed_noise,labels,alpha, step) * 0.5 + 0.5
                 # take out (up to) 32 examples
                 img_grid_fake = torchvision.utils.make_grid(fake[:32], normalize=True)
 
@@ -90,7 +91,7 @@ def train_fn(
 
     return tensorboard_step, alpha
 
-Sizes2 = [[4,4],[8,6],[34,6],[136,12],[546,25],[546,50],[546,100],[546,199]]
+Sizes2 = [[4,4],[8,6],[17,6],[34,12],[68,25],[137,50],[273,100],[546,199]]
 
 
 # initialize gen and disc, note: discriminator should be called critic,
