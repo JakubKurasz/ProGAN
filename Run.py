@@ -10,6 +10,7 @@ from PreProcessing import preProcessing
 from Model import Generator
 from Model import Discriminator
 from Model import gradient_penalty
+from torch.autograd import Variable
 
 # Hyperparameters etc.
 device = "cuda" if torch.cuda.is_available() else "cpu"
@@ -39,9 +40,11 @@ def train_fn(
     scaler_critic
 ):
     for batch_idx, (real, labels) in enumerate(train_dl):
+        LongTensor = torch.cuda.LongTensor 
+
         real = real.to(device)
         cur_batch_size = real.shape[0]
-        labels = labels.to(device)
+        labels = Variable(labels.type(LongTensor))
 
         # Train Critic: max E[critic(real)] - E[critic(fake)] <-> min -E[critic(real)] + E[critic(fake)]
         # which is equivalent to minimizing the negative of the expression
