@@ -143,6 +143,6 @@ for num_epochs in PROGRESSIVE_EPOCHS[step:]:
                 scaler_gen,
                 scaler_critic,
             )
-
+        torch.save(gen.state_dict(), "ProGAN.pth")
         step += 1  # progress to the next img size
 
