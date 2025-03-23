@@ -120,7 +120,7 @@ class Discriminator(nn.Module):
         # use the final block
         cur_step = len(self.prog_blocks) - steps
         embeddings=self.embeddings[steps](labels)
-        embeddings=embeddings.view(labels.shape[0],1,x.shape[2],x.shape[2]) #x.shape[2] is the image size [Batch_size,channels,imgsize,imgsize]
+        embeddings=embeddings.view(labels.shape[0],1,x.shape[2],x.shape[3]) #x.shape[2] is the image size [Batch_size,channels,imgsize,imgsize]
         x=torch.cat([x,embeddings],dim=1)
 
         # convert from rgb as initial step, this will depend on
