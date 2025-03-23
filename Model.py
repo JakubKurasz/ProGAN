@@ -47,7 +47,7 @@ def gradient_penalty(critic, labels, real, fake, alpha, train_step, device="cpu"
 class Discriminator(nn.Module):
     def __init__(self, z_dim, in_channels, img_channels=1):
         super(Discriminator, self).__init__()
-        self.prog_blocks, self.rgb_layers = nn.ModuleList([]), nn.ModuleList([])
+        self.prog_blocks, self.rgb_layers, self.embeddings = nn.ModuleList([]), nn.ModuleList([]),  nn.ModuleList([])
         self.leaky = nn.LeakyReLU(0.2)
 
         resolutions=[16,48,102,408,1700,6850,27300,108654]
