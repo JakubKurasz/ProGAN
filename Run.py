@@ -39,8 +39,9 @@ def train_fn(
     scaler_gen,
     scaler_critic
 ):
+    LongTensor = torch.cuda.LongTensor 
     for batch_idx, (real, labels) in enumerate(train_dl):
-        LongTensor = torch.cuda.LongTensor 
+        
 
         real = real.to(device)
         cur_batch_size = real.shape[0]

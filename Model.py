@@ -113,7 +113,7 @@ class Discriminator(nn.Module):
         # will get information about the variation in the batch/image
         return torch.cat([x, batch_statistics], dim=1)
 
-    def forward(self, labels, x, alpha, steps):
+    def forward(self, x,labels, alpha, steps):
         # where we should start in the list of prog_blocks, maybe a bit confusing but
         # the last is for the 4x4. So example let's say steps=1, then we should start
         # at the second to last because input_size will be 8x8. If steps==0 we just
