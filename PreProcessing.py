@@ -9,9 +9,9 @@ import numpy as np
 from torchvision.transforms import InterpolationMode
 
 def preProcessing(imgSize):
-    LABELS_PATH = '/content/drive/My Drive/OCTDL_labels.csv'
-    INPUT_PATH = '/content/drive/My Drive/OCTDL'
-    OUTPUT_PATH = '/content/drive/My Drive/augmented_data'
+    LABELS_PATH = '/uolstore/home/users/sc21jk/Documents/GroupProject/WGANOCT/OCTDL_labels.csv'
+    INPUT_PATH = '/uolstore/home/users/sc21jk/Documents/GroupProject/WGANOCT/OCTDL'
+    OUTPUT_PATH = '/uolstore/home/users/sc21jk/Documents/GroupProject/WGANOCT/augmented_data'
 
     df = pd.read_csv(LABELS_PATH)
 
