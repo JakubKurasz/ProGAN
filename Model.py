@@ -6,7 +6,7 @@ from math import log2
 
 
 factors = [1,1, 1, 1 / 2, 1 / 4, 1 / 8, 1 / 16,1/32]
-sizes = [[1.5,2],[1,4.25],[2,4],[25/12,546/136],[2,1],[2,1],[199/100,1]]
+sizes = [[1.5,2],[1,17/8],[2,2],[25/12,2],[2,137/68],[2,273/137],[199/100,2]]
 
 
 def gradient_penalty(critic, real, fake, alpha, train_step, device="cpu"):
@@ -68,17 +68,17 @@ class Discriminator(nn.Module):
         self.rgb_layers.append(self.initial_rgb)
 
         self.avg_pool = [nn.AvgPool2d(#273 * 100 546 * 100
-            kernel_size=[3,1], stride=[2,1], padding = [1,0]
+            kernel_size=[3], stride=[2], padding = [1]
         ),nn.AvgPool2d( #137 * 50 546 * 50
-            kernel_size=[3,1], stride=[2,1], padding = [1,0]
+            kernel_size=[3], stride=[2], padding = [1]
         ),nn.AvgPool2d( #68 * 25 546 * 25
-            kernel_size=[3,1], stride=[2,1], padding = [1,0]
+            kernel_size=[3,4], stride=[2], padding = [1]
         ),nn.AvgPool2d( #34 * 12 136 * 12
-            kernel_size=[3,3], stride=[2,4], padding = 0
+            kernel_size= 3, stride=2, padding = [0,1]
         ),nn.AvgPool2d( #17 * 6 34 * 6
-            kernel_size=[3,3], stride=[2,4], padding = [1,0]
+            kernel_size=3, stride=2, padding = 1
         ),nn.AvgPool2d( #8 * 6
-            kernel_size=[1,3], stride=[1,4], padding = 0
+            kernel_size=[1,4], stride=[1,2], padding = [0,1]
         ),nn.AvgPool2d( #4 * 4
             kernel_size=[5,3], stride=[1,2], padding = [1,1]
         ) ] # down sampling using avg pool
